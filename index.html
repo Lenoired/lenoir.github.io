@@ -84,8 +84,14 @@
     function vectorLength(vector) {
       return Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1]);
     }
-
-    const gpu = new GPU();
+    function initGPU() {
+	try {
+		return new window.GPU.GPU();
+	} catch (e) {
+		return new GPU();
+	}
+}
+    const gpu = initGPU();
 
     // Add the necessary functions to the GPU kernel
     gpu
