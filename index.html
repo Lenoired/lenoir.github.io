@@ -7,7 +7,7 @@
       text-align: center;
       margin: 0;
       overflow: hidden;
-      pointer-events: none; /* Disables mouse input on the body */
+      pointer-events: none; 
     }
     canvas {
       padding: 0;
@@ -57,8 +57,7 @@
   <div id="score" style="display: none;">Score: 0</div>
 
   <script>
-    // Mandelbrot iteration function
-	  // Disable user interaction on the page
+ 
     document.body.addEventListener('mousemove', (e) => e.preventDefault(), { passive: false });
     document.body.addEventListener('mousedown', (e) => e.preventDefault(), { passive: false });
     document.body.addEventListener('mouseup', (e) => e.preventDefault(), { passive: false });
@@ -71,7 +70,7 @@
       ];
     }
 
-    // Palette generation for GPU intensive color calculation
+    
     function palette(t, a, b, c, d) {
       return [
         a[0] + b[0] * Math.cos(6.28318 * (c[0] * t + d[0])),
@@ -80,7 +79,7 @@
       ];
     }
 
-    // Calculate the length of a vector for escape condition
+
     function vectorLength(vector) {
       return Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1]);
     }
@@ -93,13 +92,13 @@
 }
     const gpu = initGPU();
 
-    // Add the necessary functions to the GPU kernel
+   
     gpu
       .addFunction(f)
       .addFunction(palette)
       .addFunction(vectorLength);
 
-    // GPU kernel to calculate Mandelbrot set with higher resolution and iterations
+   
     const calculateMandelbrotSet = gpu.createKernel(function(zoomCenter, zoomSize, maxIterations) {
       let x = [0, 0];
       let c = [
@@ -122,110 +121,97 @@
       } else {
         this.color(.85, .99, 1, 1);
       }
-    })
+    }, {
+  frameRate: -1 
+})
       .setGraphical(true)
-      .setOutput([1000, 1000]); // Updated resolution to 1200x1200
+      .setOutput([1000, 1000]);
 
-    // Zoom parameters
-    let zoomCenter = [0, 0], // Always zoom at the center
-        zoomSize = 4,
-        maxIterations = 1000, // High iterations for more complex detail
-        zoomFactor = 0.98, // Very fast zoom-in factor
-        zoomOutFactor = 1.02, // Very fast zoom-out factor
+  
+    let zoomCenter = [0,0],
+        zoomSize = 0.01,
+        maxIterations = 500, 
+        zoomFactor = 0.01, 
+        zoomOutFactor = 0.025, 
         stopZooming = false,
-        isZoomingIn = true, // Flag to toggle between zooming in and zooming out
-        zoomDirectionChangeThreshold = 0.01, // Threshold to switch zoom direction
-        stopZoomingSize = 0.1; // Stop zooming when this zoom size is reached
+        isZoomingIn = true, 
+        zoomDirectionChangeThreshold = 0.01, 
+        stopZoomingSize = 0.1; 
 
-    // FPS variables
+ 
     let lastFrameTime = performance.now();
     let frameCount = 0;
     let fps = 0;
 
-    // Total Frames rendered variable
+ 
     let totalRenderedFrames = 0;
 
-    // Initial rendering of the Mandelbrot set
+
     calculateMandelbrotSet(zoomCenter, zoomSize, maxIterations);
     const canvas = calculateMandelbrotSet.canvas;
     document.body.appendChild(canvas);
 
-    // Function to update and render the FPS counters
+   
     function updateFPS() {
       frameCount++;
       const now = performance.now();
       const deltaTime = now - lastFrameTime;
 
-      // Update the FPS counter every second
+    
       if (deltaTime >= 1000) {
-        fps = frameCount; // FPS in last second
+        fps = frameCount;
         frameCount = 0;
         lastFrameTime = now;
       }
 
-      // Increment the total rendered frames
+      
       totalRenderedFrames++;
 
-      // Update the FPS display
-      document.getElementById('fpsCounter').innerText = `Current FPS: ${fps}`;
-      document.getElementById('totalRenderedFPS').innerText = `Total Rendered Frames: ${totalRenderedFrames}`;
-    }
-
-    // Render function that alternates between zooming in and zooming out
-    function render() {
-      calculateMandelbrotSet(zoomCenter, zoomSize, maxIterations);
-
-      // If zooming in, we reduce zoom size and speed it up
-      if (isZoomingIn) {
-        zoomSize *= zoomFactor; // Very fast zoom-in speed
-        
-        // When we reach a certain zoom size, switch to zooming out
-        if (zoomSize < stopZoomingSize) {
-          isZoomingIn = false;
-        }
-      } 
-      // If zooming out, we increase zoom size and speed it up
-      else {
-        zoomSize *= zoomOutFactor; // Very fast zoom-out speed
-
-        // When we reach a certain zoom size, switch back to zooming in
-        if (zoomSize > 4) {
-          isZoomingIn = true;
-        }
-      }
-
-      // Adjust the number of iterations as we zoom in and out
-      if (isZoomingIn) {
-        maxIterations -= 5; // Speed up zoom by reducing iterations faster
-        if (maxIterations < 50) {
-          maxIterations = 50;
-        }
-      } else {
-        maxIterations += 10; // More iterations when zooming out
-        if (maxIterations > 3000) { // Cap maxIterations to prevent overloading
-          maxIterations = 3000;
-        }
-      }
-
-      // Update FPS counters
-      updateFPS();
-    }
-
-    // Set a fixed frame rate using setInterval (not tied to screen refresh)
-    const frameRate = 250000; // Target 120 FPS or any value you want for fast zoom
-    const interval = 1000 / frameRate; // Interval in milliseconds
     
-    const intervalID = setInterval(render, interval); // Start rendering at fixed frame rate
+	  try {
+       document.getElementById('fpsCounter').innerText = `Current FPS: ${fps}`;
+       document.getElementById('totalRenderedFPS').innerText = `Total Rendered Frames: ${totalRenderedFrames}`;
+	  } catch (e) {}
+    }
 
-    // Function to stop rendering after a specific amount of time (e.g., 10 seconds)
-    const stopTime = 2500; // Stop after 10 seconds (10000ms)
+   
+	let lastRenderTime = performance.now();
+    function render() {
+  const currentTime = performance.now();
+  const deltaTime = currentTime - lastRenderTime;
+
+  
+  if (deltaTime >= (1000 / 1000)) { 
+    calculateMandelbrotSet(zoomCenter, zoomSize, maxIterations);
+
+    if (isZoomingIn) {
+      zoomSize *= zoomFactor;
+      if (zoomSize < stopZoomingSize) {
+        isZoomingIn = false;
+      }
+    } else {
+      zoomSize *= zoomOutFactor;
+      if (zoomSize > 4) {
+        isZoomingIn = true;
+      }
+    }
+
+  
+    updateFPS();
+    lastRenderTime = currentTime;
+  }
+
+
+  requestAnimationFrame(render);
+}
+
+    const intervalID = setInterval(render);
+
+   
+    const stopTime = 30000;
     setTimeout(function() {
-      clearInterval(intervalID); // Stop the rendering loop
-	  document.write(`<h1>Score (total rendered frames): ${totalRenderedFrames}</h1>`);
-     // document.getElementById('fpsCounter').style.display = 'none'; // Hide FPS counter
-      //document.getElementById('totalRenderedFPS').style.display = 'none'; // Hide total FPS counter
-     // document.getElementById('score').innerText = `Score: ${totalRenderedFrames}`; // Display the score
-     // document.getElementById('score').style.display = 'block'; // Show score
+      clearInterval(intervalID);
+	  document.write(`<h1>Score: ${totalRenderedFrames}</h1><h1>FPS: ${fps}</h1><h1>Avg FPS: ${totalRenderedFrames/30}</h1>`);
     }, stopTime);
 
 
