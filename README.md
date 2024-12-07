@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <script src="https://cdn.jsdelivr.net/npm/gpu.js@2.9.1/dist/gpu-browser.min.js"></script>
