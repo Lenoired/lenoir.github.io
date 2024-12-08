@@ -67,7 +67,6 @@
   <div id="fpsCounter">Current FPS: 0</div>
   <div id="totalRenderedFPS">Total Rendered FPS: 0</div>
   <div id="timeLeft">Time left: 0</div>
-  
   <div id="score" style="display: none;">Score: 0</div>
 
   <script>
@@ -197,8 +196,12 @@
 
   
   if (deltaTime >= (1000 / 10000000)) { 
-    calculateMandelbrotSet(zoomCenter, zoomSize, maxIterations);
-
+    try {
+      calculateMandelbrotSet(zoomCenter, zoomSize, maxIterations);
+    } catch (e) {
+	  return
+	 
+	}
     if (isZoomingIn) {
       zoomSize *= zoomFactor;
       if (zoomSize < stopZoomingSize) {
@@ -226,7 +229,9 @@
     const stopTime = 30000;
     setTimeout(function() {
       clearInterval(intervalID);
-	  document.write(`<h1>Score: ${totalRenderedFrames}</h1><h1>FPS: ${fps}</h1><h1>Avg FPS: ${totalRenderedFrames/30}</h1>`);
+	  calculateMandelbrotSet.destroy();
+	  gpu.destroy();
+	  document.write(`<h1>Score: ${totalRenderedFrames}</h1><h1>FPS: ${fps}</h1><h1>Avg FPS: ${totalRenderedFrames/30}</h1><h1>Time elapsed: ${Date.now() - totalTimeElapsed}ms</h1>`);
     }, stopTime);
 
 
